@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лаборатория гармонии</title>
+<style>
+/* layout: a poster field with its own grid; the two shapes on the left, the choices on the right (stacked on phones) */
+@font-face { font-family: "Evolventa"; font-weight: 400; src: url("fonts/Evolventa-Regular.woff") format("woff"); }
+@font-face { font-family: "Evolventa"; font-weight: 700; src: url("fonts/Evolventa-Bold.woff") format("woff"); }
+:root {
+  --field-a: #2fe959;
+  --field-b: #befe05;
+  --ink: #2e2e2e;
+  --ink-soft: rgba(46, 46, 46, .62);
+  --line: rgba(46, 46, 46, .55);
+  --circle-a: #ff1ce5;
+  --circle-b: #ff7604;
+  --square-a: #0fdf00;
+  --square-b: #bbff01;
+  --chip-on-text: #d9ff6a;
+  --display: "Evolventa", "Century Gothic", "URW Gothic", "Avenir Next", system-ui, sans-serif;
+  --body: "Evolventa", "Century Gothic", "Avenir Next", system-ui, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.4;
+  background:
+    linear-gradient(var(--line), var(--line)) 0 64px / 100% 1px no-repeat,
+    radial-gradient(120% 110% at 50% 70%, var(--field-a) 0%, var(--field-b) 100%) fixed;
+  background-color: var(--field-b);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; }
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  min-height: 64px;
+  padding-block: 18px 10px;
+}
+.brand { font-family: var(--display); font-size: 15px; letter-spacing: .02em; }
+.brand b { font-weight: 700; }
+.thesis { font-size: 15px; color: var(--ink-soft); }
+
+h1 {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(44px, 8.4vw, 112px);
+  line-height: .9;
+  letter-spacing: -.01em;
+  margin: 28px 0 14px;
+  text-wrap: balance;
+}
+h1 b { font-weight: 700; }
+.lead { max-width: 60ch; font-size: 18px; margin: 0 0 32px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: 32px;
+  align-items: start;
+}
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- stage ---------- */
+.stage {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  display: grid;
+  gap: 14px;
+}
+@media (max-width: 860px) { .stage { position: static; } }
+.stage svg { width: 100%; height: auto; display: block; overflow: visible; }
+.now {
+  display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline;
+  border-top: 1px solid var(--line); padding-top: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.now .chord { font-family: var(--display); font-weight: 700; font-size: 34px; line-height: 1; }
+.now .meta { color: var(--ink-soft); font-size: 14px; }
+.transport { display: flex; flex-wrap: wrap; gap: 10px; }
+
+button {
+  font: inherit; color: inherit; cursor: pointer;
+  border: 1px solid var(--ink); background: transparent;
+  border-radius: 999px; padding: 9px 16px;
+  transition: background-color .15s, color .15s, transform .15s;
+}
+button:hover { background: rgba(46, 46, 46, .08); }
+button:active { transform: scale(.97); }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px dashed var(--ink); outline-offset: 3px; }
+button.primary { background: var(--ink); color: var(--chip-on-text); font-weight: 700; padding: 11px 22px; }
+button.primary:hover { background: #1f1f1f; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--chip-on-text); }
+
+/* ---------- controls ---------- */
+.controls { display: grid; gap: 26px; }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 10px; }
+legend, .label {
+  font-size: 12px; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--ink-soft); padding: 0; margin-bottom: 2px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { padding: 7px 13px; }
+.modes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.modes button {
+  border-radius: 14px; text-align: left; padding: 10px 12px;
+  display: grid; gap: 2px;
+}
+.modes button .n { font-weight: 700; }
+.modes button .d { font-size: 13px; opacity: .78; }
+.row { display: flex; align-items: center; gap: 14px; }
+input[type=range] { flex: 1; min-width: 0; accent-color: var(--ink); }
+.bpm { font-family: var(--display); font-weight: 700; font-size: 24px; min-width: 4.2ch; font-variant-numeric: tabular-nums; }
+.hint { font-size: 13px; color: var(--ink-soft); margin: 0; max-width: 60ch; }
+
+/* ---------- saved ---------- */
+.save { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 18px; }
+textarea {
+  font: inherit; color: var(--ink); width: 100%; min-height: 64px; resize: vertical;
+  background: rgba(255, 255, 255, .35); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+}
+.saved { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.saved li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center;
+  border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px;
+  background: rgba(255, 255, 255, .22);
+}
+.saved li.main { border-color: var(--ink); background: rgba(255, 255, 255, .45); }
+.saved .t { font-weight: 700; }
+.saved .note { grid-column: 1 / -1; font-size: 14px; color: var(--ink-soft); }
+.saved .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.saved .acts button { padding: 5px 11px; font-size: 13px; }
+.empty { font-size: 14px; color: var(--ink-soft); margin: 0; }
+.status { font-size: 13px; color: var(--ink-soft); min-height: 1.2em; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="brand"><b>web synth</b>esizer · geometric performance</div>
+    <div class="thesis">все формы происходят от двух</div>
+  </header>
+
+  <h1>лаборатория <b>гармонии</b></h1>
+  <p class="lead">Выберите на слух язык, на котором говорят двое. Здесь звучат те же голоса, что в синтезаторе: хор круга, дерево квадрата и колокол ребёнка, с той же реверберацией и атмосферой. Включите звук, начните со сцены синтезатора и переключайте лад, тонику, темп и движение аккордов.</p>
+
+  <div class="grid">
+    <section class="stage" aria-label="Сцена">
+      <svg id="scene" viewBox="0 0 520 400" role="img" aria-label="Круг и квадрат; между ними появляется ребёнок после встречи">
+        <defs>
+          <linearGradient id="gC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff1ce5"/><stop offset="1" stop-color="#ff7604"/></linearGradient>
+          <linearGradient id="gS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0fdf00"/><stop offset="1" stop-color="#bbff01"/></linearGradient>
+          <linearGradient id="gK" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff1ce5"/><stop offset=".5" stop-color="#ff7604"/><stop offset="1" stop-color="#bbff01"/></linearGradient>
+        </defs>
+        <g stroke="#2e2e2e" stroke-width="1" opacity=".55">
+          <line x1="0" y1="60" x2="520" y2="60"/><line x1="0" y1="340" x2="520" y2="340"/>
+          <line x1="130" y1="0" x2="130" y2="400"/><line x1="390" y1="0" x2="390" y2="400"/>
+        </g>
+        <g id="sq" transform="translate(372 210)">
+          <rect x="-82" y="-82" width="164" height="164" fill="url(#gS)" stroke="#2e2e2e" transform="rotate(30)"/>
+        </g>
+        <g id="ci" transform="translate(160 200)">
+          <circle r="104" fill="url(#gC)" stroke="#2e2e2e"/>
+          <path d="M0 80 L0 -80 M0 -80 C-5 -66 -14 -56 -32 -48 M0 -80 C5 -66 14 -56 32 -48" fill="none" stroke="#2e2e2e" stroke-width="11" stroke-linecap="square" stroke-linejoin="bevel"/>
+        </g>
+        <g id="kid" transform="translate(268 300)" opacity="0">
+          <path id="kidPath" fill="url(#gK)" stroke="#2e2e2e"/>
+        </g>
+        <text id="kidLabel" x="268" y="378" text-anchor="middle" font-size="15" fill="#2e2e2e" opacity="0" font-family="Evolventa, sans-serif">ребёнок</text>
+      </svg>
+      <div class="now" aria-live="polite">
+        <span class="chord" id="chord">Dm</span>
+        <span class="meta" id="meta">i · ре дорийский · 108 BPM</span>
+      </div>
+      <div class="transport">
+        <button class="primary" id="play" type="button">Включить звук</button>
+        <button id="meet" type="button">Встреча</button>
+      </div>
+      <p class="hint" id="meetHint">«Встреча» — как в синтезаторе: формы накладываются, и звучит аккорд — сначала терция, глубже квинта, при слиянии октава. Потом новая форма собирается со щелчком, и рождается ребёнок — колокол с мотивом из лада.</p>
+    </section>
+
+    <section class="controls" aria-label="Выбор гармонии">
+      <fieldset>
+        <legend>Сцены синтезатора</legend>
+        <div class="chips" id="scenes"></div>
+        <p class="hint" id="sceneHint">Так звучит каждая сцена истории сейчас. Начните с любой и меняйте, если на слух хочется иначе.</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Лад</legend>
+        <div class="modes" id="modes"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Тоника</legend>
+        <div class="chips" id="tonics"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Темп</legend>
+        <div class="row">
+          <input id="tempo" type="range" min="56" max="140" step="1" value="108" aria-label="Темп, удары в минуту">
+          <span class="bpm" id="bpm">108</span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Движение аккордов</legend>
+        <div class="chips" id="motions"></div>
+        <p class="hint" id="motionHint"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend>Голоса</legend>
+        <div class="chips">
+          <button id="vPad" type="button" aria-pressed="true">Круг · хор</button>
+          <button id="vPulse" type="button" aria-pressed="true">Квадрат · дерево</button>
+          <button id="vKid" type="button" aria-pressed="false">Ребёнок · колокол</button>
+        </div>
+      </fieldset>
+
+      <div class="save">
+        <span class="label">Мои варианты</span>
+        <label class="hint" for="note">Что вы слышите в этом варианте? Пара слов поможет потом выбрать.</label>
+        <textarea id="note" placeholder="например: двое ещё не знают друг друга, но уже тянутся"></textarea>
+        <div class="row"><button id="save" type="button">Сохранить вариант</button></div>
+        <p class="status" id="status"></p>
+        <ul class="saved" id="saved"></ul>
+        <p class="empty" id="empty">Пока ничего не сохранено. Найдите звучание, которое отвечает вашей фразе, и сохраните его. Один вариант можно отметить главным — это выбор для синтезатора.</p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  /* ---------------- music data ---------------- */
+  const MODES = [
+    { id: 'ionian',     n: 'Ионийский',   d: 'ясный, мажорный',        s: [0,2,4,5,7,9,11] },
+    { id: 'lydian',     n: 'Лидийский',   d: 'парящий, светлый',       s: [0,2,4,6,7,9,11] },
+    { id: 'mixolydian', n: 'Миксолидийский', d: 'тёплый, открытый',   s: [0,2,4,5,7,9,10] },
+    { id: 'dorian',     n: 'Дорийский',   d: 'светлая грусть',         s: [0,2,3,5,7,9,10] },
+    { id: 'aeolian',    n: 'Эолийский',   d: 'натуральный минор',      s: [0,2,3,5,7,8,10] },
+    { id: 'phrygian',   n: 'Фригийский',  d: 'тёмный, напряжённый',    s: [0,1,3,5,7,8,10] },
+    { id: 'harmonic',   n: 'Гармонический минор', d: 'драматичный',     s: [0,2,3,5,7,8,11] },
+    { id: 'locrian',    n: 'Локрийский',  d: 'неустойчивый',           s: [0,1,3,5,6,8,10] },
+    { id: 'whole',      n: 'Целотонный',  d: 'без центра, невесомый',  s: [0,2,4,6,8,10] }
+  ];
+  const NOTES = ['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+  const NOTES_RU = ['до','до-диез','ре','ми-бемоль','ми','фа','фа-диез','соль','ля-бемоль','ля','си-бемоль','си'];
+  const MOTIONS = [
+    { id: 'still', n: 'Покой',   p: [0],          h: 'Один аккорд. Двое стоят рядом и слушают друг друга.' },
+    { id: 'step',  n: 'Шаг',     p: [0,1],        h: 'Два соседних аккорда: светло и открыто, без возвращения домой.' },
+    { id: 'sway',  n: 'Качание', p: [0,3],        h: 'Два аккорда туда и обратно, как дыхание.' },
+    { id: 'home',  n: 'Дом',     p: [0,3,0,6],    h: 'Уход и возвращение к тонике.' },
+    { id: 'path',  n: 'Путь',    p: [0,5,3,4],    h: 'Аккорды идут вперёд и не возвращаются сразу.' },
+    { id: 'fall',  n: 'Спуск',   p: [0,6,5,4],    h: 'Плавное нисхождение по ладу.' }
+  ];
+  const SCENES = [
+    { id: 'he',     n: 'он одинок',     mode: 'lydian',   tonic: 2,  bpm: 90, motion: 'step' },
+    { id: 'she',    n: 'она потеряна',  mode: 'dorian',   tonic: 11, bpm: 90, motion: 'home' },
+    { id: 'search', n: 'поиск той',     mode: 'harmonic', tonic: 11, bpm: 84, motion: 'path' },
+    { id: 'meet',   n: 'где ты / я тут', mode: 'lydian',  tonic: 2,  bpm: 80, motion: 'step' },
+    { id: 'light',  n: 'свет ваш',      mode: 'ionian',   tonic: 2,  bpm: 92, motion: 'path' },
+    { id: 'final',  n: 'снова двое',    mode: 'ionian',   tonic: 2,  bpm: 92, motion: 'still' }
+  ];
+  const SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+  const FLAT  = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+  /* spell the mode so that its seven notes use seven different letters */
+  function spelling() {
+    const sc = modeOf().s.map((x) => (st.tonic + x) % 12);
+    const score = (names) => {
+      const letters = new Set(sc.map((pc) => names[pc][0]));
+      const acc = sc.filter((pc) => names[pc].length > 1).length;
+      return (sc.length === 7 ? (7 - letters.size) * 10 : 0) + acc;
+    };
+    return score(SHARP) <= score(FLAT) ? SHARP : FLAT;
+  }
+  const ROMAN = ['i','ii','iii','iv','v','vi','vii'];
+
+  const st = { mode: 'ionian', tonic: 2, bpm: 92, motion: 'path', pad: true, pulse: true, kid: false };
+
+  const modeOf = () => MODES.find((m) => m.id === st.mode);
+  const motionOf = () => MOTIONS.find((m) => m.id === st.motion);
+  const deg = (d) => { const s = modeOf().s, n = s.length, o = Math.floor(d / n), i = ((d % n) + n) % n; return s[i] + 12 * o; };
+  const C2 = 65.406;
+  const hz = (semi) => C2 * Math.pow(2, (st.tonic + semi) / 12);
+  function chordName(d) {
+    const r = deg(d), t = deg(d + 2) - r, f = deg(d + 4) - r;
+    const root = spelling()[(st.tonic + r) % 12];
+    const q = t === 3 && f === 7 ? 'm' : t === 4 && f === 7 ? '' : t === 3 && f === 6 ? '°' : t === 4 && f === 8 ? '+' : '';
+    const n = modeOf().s.length;
+    const rn = n === 7 ? (q === '' || q === '+' ? ROMAN[((d % 7) + 7) % 7].toUpperCase() : ROMAN[((d % 7) + 7) % 7]) + (q === '°' ? '°' : '') : '';
+    return { name: root + q, roman: rn };
+  }
+
+  /* ---------------- audio: the same voices and the same chain as the synthesizer ---------------- */
+  let ctx = null, A = null, playing = false, timer = 0, step = 0, nextTime = 0, chordD = 0, chordAt = 0;
+  const glide = (p, v, t, tau) => { p.cancelScheduledValues(t); p.setTargetAtTime(v, t, tau); };
+  const JI = { 0: 1, 3: 6 / 5, 4: 5 / 4, 5: 4 / 3, 7: 3 / 2, 8: 8 / 5, 9: 5 / 3, 12: 2, 14: 9 / 4, 15: 12 / 5, 16: 5 / 2 };
+  const ratio = (s) => JI[s] || Math.pow(2, s / 12);
+  function env(g, t, peak, a, d) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), t + a);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+  }
+  /* the chord of degree d, exactly as the synth builds it */
+  function chordOf(d) {
+    const r = deg(d);
+    return { root: hz(r), third: deg(d + 2) - r, fifth: deg(d + 4) - r, ninth: deg(d + 1) + 12 - r, note: (off, oct) => hz(deg(d + off) + 12 * oct) };
+  }
+  function impulse(sec) {
+    const sr = ctx.sampleRate, n = Math.floor(sec * sr), b = ctx.createBuffer(2, n, sr);
+    for (let c = 0; c < 2; c++) {
+      const d = b.getChannelData(c); let lp = 0;
+      for (let i = 0; i < n; i++) { const t = i / n; lp += (Math.random() * 2 - 1 - lp) * (0.65 - 0.6 * t); d[i] = lp * Math.pow(1 - t, 2.6); }
+    }
+    return b;
+  }
+  const send = (from, to, g) => { const s = ctx.createGain(); s.gain.value = g; from.connect(s).connect(to); };
+  function build() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC();
+    A = {};
+    // master: air → soft saturation → master → compressor → analyser
+    A.bus = ctx.createGain();
+    A.air = ctx.createBiquadFilter(); A.air.type = 'lowpass'; A.air.frequency.value = 4200; A.air.Q.value = 0.4;
+    A.sat = ctx.createWaveShaper();
+    const sc = new Float32Array(2048);
+    for (let i = 0; i < 2048; i++) { const x = (i / 2047) * 2 - 1; sc[i] = Math.tanh(1.05 * x) / Math.tanh(1.05); }
+    A.sat.curve = sc; A.sat.oversample = '2x';
+    A.master = ctx.createGain(); A.master.gain.value = 0;
+    A.comp = ctx.createDynamicsCompressor(); A.comp.threshold.value = -14; A.comp.knee.value = 18; A.comp.ratio.value = 2.5; A.comp.attack.value = 0.01; A.comp.release.value = 0.25;
+    A.an = ctx.createAnalyser(); A.an.fftSize = 512;
+    A.bus.connect(A.air).connect(A.sat).connect(A.master).connect(A.comp).connect(A.an).connect(ctx.destination);
+    // reverb (4.6 s) and ping-pong delay (dotted eighth)
+    A.revIn = ctx.createGain();
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 180;
+    const conv = ctx.createConvolver(); conv.buffer = impulse(4.6);
+    const revOut = ctx.createGain(); revOut.gain.value = 0.68;
+    A.revIn.connect(hp).connect(conv).connect(revOut).connect(A.air);
+    A.delIn = ctx.createGain();
+    A.dL = ctx.createDelay(3); A.dR = ctx.createDelay(3);
+    const fb = ctx.createGain(); fb.gain.value = 0.38;
+    const fbLp = ctx.createBiquadFilter(); fbLp.type = 'lowpass'; fbLp.frequency.value = 2400;
+    const pL = ctx.createStereoPanner(), pR = ctx.createStereoPanner(); pL.pan.value = -0.7; pR.pan.value = 0.7;
+    const delOut = ctx.createGain(); delOut.gain.value = 0.42;
+    A.delIn.connect(A.dL); A.dL.connect(A.dR); A.dR.connect(fbLp).connect(fb).connect(A.dL);
+    A.dL.connect(pL).connect(delOut); A.dR.connect(pR).connect(delOut);
+    delOut.connect(A.air); send(delOut, A.revIn, 1);
+    setDelayTime();
+    A.noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const nd = A.noise.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+
+    // circle — she: chord pad + a choir singing a vowel + breath
+    A.padF = ctx.createBiquadFilter(); A.padF.type = 'lowpass'; A.padF.frequency.value = 850; A.padF.Q.value = 1.2;
+    A.duck = ctx.createGain();
+    const shape = ctx.createGain(); shape.gain.value = 0.3;
+    A.padG = ctx.createGain(); A.padG.gain.value = 0;
+    A.padF.connect(A.duck).connect(shape).connect(A.padG);
+    A.padG.connect(A.bus); send(A.padG, A.revIn, 0.55); send(A.padG, A.delIn, 0.08);
+    const mk = (type, detune, g) => { const o = ctx.createOscillator(); o.type = type; o.detune.value = detune; const gg = ctx.createGain(); gg.gain.value = g; o.connect(gg).connect(A.padF); o.start(); return o; };
+    A.pad = { root: mk('sine', -3, 0.44), fifth: mk('triangle', 2, 0.23), third: mk('sine', 4, 0.16), ninth: mk('sine', -2, 0.05), bright: mk('triangle', 7, 0.0225), sub: mk('sine', 0, 0.22) };
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.08; const la = ctx.createGain(); la.gain.value = 100;
+    lfo.connect(la).connect(A.padF.frequency); lfo.start();
+    A.v1 = ctx.createOscillator(); A.v1.type = 'sawtooth';
+    A.v2 = ctx.createOscillator(); A.v2.type = 'sawtooth'; A.v2.detune.value = 9;
+    const vib = ctx.createOscillator(); vib.frequency.value = 4.6; const va = ctx.createGain(); va.gain.value = 5;
+    vib.connect(va); va.connect(A.v1.detune); va.connect(A.v2.detune); vib.start();
+    const vm = ctx.createGain(); vm.gain.value = 0.5; A.v1.connect(vm); A.v2.connect(vm);
+    const choir = ctx.createGain(); choir.gain.value = 0.115;
+    [[515, 7, 1], [980, 9, 0.55], [2340, 11, 0.18]].forEach(([f, q, g]) => {   // the vowel between "у" and "а"
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q;
+      const gg = ctx.createGain(); gg.gain.value = g; vm.connect(bp).connect(gg).connect(choir);
+    });
+    const cl = ctx.createBiquadFilter(); cl.type = 'lowpass'; cl.frequency.value = 3000;
+    choir.connect(cl).connect(A.duck); A.v1.start(); A.v2.start();
+    const br = ctx.createBufferSource(); br.buffer = A.noise; br.loop = true;
+    const bf = ctx.createBiquadFilter(); bf.type = 'bandpass'; bf.frequency.value = 1200; bf.Q.value = 1.6;
+    const bg = ctx.createGain(); bg.gain.value = 0.012;
+    const bl = ctx.createOscillator(); bl.frequency.value = 0.13; const bla = ctx.createGain(); bla.gain.value = 0.008; bl.connect(bla).connect(bg.gain); bl.start();
+    br.connect(bf).connect(bg).connect(A.duck); br.start();
+
+    // atmosphere: a low drone on the chord and a soft wind
+    A.atmo = ctx.createGain(); A.atmo.gain.value = 0;
+    const al = ctx.createBiquadFilter(); al.type = 'lowpass'; al.frequency.value = 900; al.Q.value = 0.3;
+    A.atmo.connect(al).connect(A.bus); send(al, A.revIn, 0.6);
+    A.drone = [[1, 0.5, -3], [1.5, 0.28, 3], [2, 0.16, -5]].map(([m, g, dt]) => { const o = ctx.createOscillator(); o.detune.value = dt; const gg = ctx.createGain(); gg.gain.value = g; o.connect(gg).connect(A.atmo); o.start(); return { o, m }; });
+    const wind = ctx.createBufferSource(); wind.buffer = A.noise; wind.loop = true;
+    const wf = ctx.createBiquadFilter(); wf.type = 'bandpass'; wf.frequency.value = 600; wf.Q.value = 0.9;
+    const wl = ctx.createOscillator(); wl.frequency.value = 0.05; const wla = ctx.createGain(); wla.gain.value = 350; wl.connect(wla).connect(wf.frequency); wl.start();
+    const wg = ctx.createGain(); wg.gain.value = 0.05; wind.connect(wf).connect(wg).connect(A.atmo); wind.start();
+
+    // square — he (wood) and the child (bell): their own channels with sends
+    A.hitOut = ctx.createGain(); A.hitOut.gain.value = 0.85; A.hitOut.connect(A.bus); send(A.hitOut, A.revIn, 0.2); send(A.hitOut, A.delIn, 0.06);
+    A.kidF = ctx.createBiquadFilter(); A.kidF.type = 'lowpass'; A.kidF.frequency.value = 1950; A.kidF.Q.value = 0.9;
+    A.kidDuck = ctx.createGain(); A.kidOut = ctx.createGain(); A.kidOut.gain.value = 0.6;
+    A.kidF.connect(A.kidDuck).connect(A.kidOut); A.kidOut.connect(A.bus); send(A.kidOut, A.revIn, 0.45); send(A.kidOut, A.delIn, 0.32);
+    setChord(chordD, ctx.currentTime, true);
+  }
+  function setDelayTime() { if (!A) return; const dt = (60 / st.bpm) * 0.75; glide(A.dL.delayTime, dt, ctx.currentTime, 0.2); glide(A.dR.delayTime, dt, ctx.currentTime, 0.2); }
+  function setChord(d, t, now) {
+    chordD = d;
+    const c = chordOf(d), r = c.root * 2, tau = now ? 0.05 : 0.35, P = A.pad;
+    glide(P.root.frequency, r, t, tau); glide(P.fifth.frequency, r * ratio(c.fifth), t, tau);
+    glide(P.third.frequency, r * 2 * ratio(c.third), t, tau); glide(P.ninth.frequency, r * ratio(c.ninth), t, tau);
+    glide(P.bright.frequency, r, t, tau); glide(P.sub.frequency, r / 2, t, tau);
+    glide(A.v1.frequency, r * ratio(c.fifth), t, tau); glide(A.v2.frequency, r * 2 * ratio(c.third), t, tau);
+    A.drone.forEach((x) => glide(x.o.frequency, (c.root / 2) * x.m, t, 0.8));
+    if (A.bloom) A.bloom.retune(c, t);
+    const delay = Math.max(0, (t - ctx.currentTime) * 1000);
+    setTimeout(showChord, delay);
+  }
+  function euclid(k, n) { const p = []; for (let i = 0; i < n; i++) p.push((i * k) % n < k ? 1 : 0); return p; }
+  const L1 = euclid(3, 8).concat(euclid(3, 8)), L2 = euclid(5, 8).concat(euclid(5, 8));
+
+  function duck(t, vel) {
+    const a = A.duck.gain; a.setTargetAtTime(1 - 0.35 * vel * 0.45, t, 0.012); a.setTargetAtTime(1, t + 0.04, 0.18);
+    const b = A.kidDuck.gain; b.setTargetAtTime(1 - 0.25 * vel * 0.5, t, 0.004); b.setTargetAtTime(1, t + 0.03, 0.12);
+  }
+  /* square — his wood: layer 1 a low log drum, layer 2 marimba bars, both with a mallet knock */
+  function hit(t, vel, layer) {
+    const f = chordOf(chordD).root * 2, g = ctx.createGain(); g.connect(A.hitOut);
+    if (layer === 1) {
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.setValueAtTime(f * 1.5, t); o.frequency.exponentialRampToValueAtTime(f * 0.98, t + 0.07);
+      env(g, t, 0.58 * vel, 0.004, 0.36); o.connect(g); o.start(t); o.stop(t + 0.55);
+      const p = ctx.createOscillator(); p.frequency.value = f * 2.76; const pg = ctx.createGain(); env(pg, t, 0.12 * vel, 0.003, 0.08);
+      p.connect(pg).connect(A.hitOut); p.start(t); p.stop(t + 0.2);
+    } else {
+      const ff = f * 1.5;
+      [[1, 0.36, 0.3], [3.93, 0.09, 0.07], [9.2, 0.03, 0.025]].forEach(([m, a, d]) => {
+        const o = ctx.createOscillator(); o.frequency.value = ff * m; const pg = ctx.createGain(); env(pg, t, a * vel, 0.003, d);
+        o.connect(pg).connect(g); o.start(t); o.stop(t + d * 5 + 0.05);
+      });
+    }
+    const n = ctx.createBufferSource(); n.buffer = A.noise;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = layer === 1 ? 700 : 1300; bp.Q.value = 2.5;
+    const ng = ctx.createGain(); env(ng, t, 0.07 * vel, 0.001, 0.016);
+    n.connect(bp).connect(ng).connect(A.hitOut); n.start(t, Math.random() * 0.5); n.stop(t + 0.04);
+    duck(t, vel);
+    pulseAt(t);
+  }
+  /* the child — an FM bell whose shimmer fades into a pure tone */
+  function note(t, m, accent) {
+    const f = chordOf(chordD).note(m, 3);
+    const o = ctx.createOscillator(); o.frequency.value = f;
+    const mod = ctx.createOscillator(); mod.frequency.value = f * 3.5;
+    const mg = ctx.createGain(); mg.gain.setValueAtTime(f * 1.6 * accent, t); mg.gain.setTargetAtTime(f * 0.08, t + 0.01, 0.18);
+    mod.connect(mg).connect(o.frequency);
+    const o2 = ctx.createOscillator(); o2.frequency.value = f * 2.005;
+    const g = ctx.createGain(), g2 = ctx.createGain(); g2.gain.value = 0.12;
+    o.connect(g); o2.connect(g2).connect(g); g.connect(A.kidF);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.17 * accent, t + 0.006); g.gain.setTargetAtTime(0, t + 0.02, 0.45);
+    [o, o2, mod].forEach((x) => { x.start(t); x.stop(t + 2.6); });
+  }
+  const MOTIF8 = [0, 2, 4, 1, 3, 5, 2, 6];
+  let bar = 0;
+  function schedule(s, t) {
+    const p = motionOf().p;
+    if (s % 32 === 0) setChord(p[Math.floor(s / 32) % p.length], t, false);
+    const q = s % 16;
+    if (q === 0) {
+      bar++;
+      const on = (st.pad ? 1 : 0) + (st.pulse ? 1 : 0) + (st.kid ? 1 : 0);
+      glide(A.atmo.gain, on ? 0.05 + 0.012 * on : 0, t, 1.6);
+    }
+    if (st.pulse && (L1[q] || L2[q])) hit(t, q === 0 ? 1 : L1[q] ? 0.82 : 0.6, L1[q] ? 1 : 2);
+    if (st.kid && q % 2 === 0) {
+      const e8 = q / 2, len = 5;
+      if (e8 < len) {
+        const form = Math.floor(bar / 4) % 4;
+        let m = MOTIF8[e8];
+        if (form === 1) m += 2; else if (form === 2) m = -m; else if (form === 3) m = MOTIF8[(len - 1 - e8) % 8];
+        note(t, m, e8 === 0 ? 1 : 0.72);
+      }
+    }
+  }
+  function tick() {
+    const STEP = 60 / st.bpm / 4;
+    if (nextTime < ctx.currentTime - 0.2) nextTime = ctx.currentTime + 0.03;
+    while (nextTime < ctx.currentTime + 0.12) { schedule(step, nextTime); nextTime += STEP; step++; }
+  }
+  function nextBeat() { const STEP = 60 / st.bpm / 4; let s = step; while (s % 4) s++; return nextTime + (s - step) * STEP; }
+  async function start() {
+    if (!ctx) build();
+    if (ctx.state !== 'running') await ctx.resume();
+    const t = ctx.currentTime;
+    A.master.gain.cancelScheduledValues(t); A.master.gain.setValueAtTime(A.master.gain.value, t); A.master.gain.linearRampToValueAtTime(0.85, t + 0.3);
+    glide(A.padG.gain, st.pad ? 1 : 0, t, 0.08);
+    step = 0; bar = 0; nextTime = t + 0.06;
+    timer = setInterval(tick, 25); tick();
+    playing = true; playBtn.textContent = 'Выключить звук';
+  }
+  function stop() {
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    A.master.gain.cancelScheduledValues(t); A.master.gain.setValueAtTime(A.master.gain.value, t); A.master.gain.linearRampToValueAtTime(0, t + 0.4);
+    clearInterval(timer); playing = false; playBtn.textContent = 'Включить звук';
+  }
+
+  /* the meeting, as in the synth: the forms overlap and bloom into the chord
+     (third → fifth → octave), then the new form is assembled and clicks into place */
+  function makeBloom() {
+    const out = ctx.createGain(); out.gain.value = 0;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400; lp.Q.value = 0.4;
+    out.connect(lp); lp.connect(A.bus); send(lp, A.revIn, 0.9);
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.18; const la = ctx.createGain(); la.gain.value = 0.25;
+    const sw = ctx.createGain(); sw.gain.value = 0.75; lfo.connect(la).connect(sw.gain); sw.connect(out); lfo.start();
+    const tones = ['third', 'fifth', 'octave'].map((name, i) => {
+      const g = ctx.createGain(); g.gain.value = 0; const pan = ctx.createStereoPanner(); pan.pan.value = [-0.4, 0.4, 0][i];
+      g.connect(pan).connect(sw);
+      const oscs = [-4, 4].map((dt) => { const o = ctx.createOscillator(); o.type = i === 2 ? 'sine' : 'triangle'; o.detune.value = dt; o.connect(g); o.start(); return o; });
+      return { name, g, oscs };
+    });
+    const b = {
+      out, tones, lfo,
+      retune(c, t) { const f = c.root * 2, fr = { third: f * ratio(c.third), fifth: f * ratio(c.fifth), octave: f * 2 }; tones.forEach((x) => x.oscs.forEach((o) => glide(o.frequency, fr[x.name], t, 0.25))); },
+      stop(t) { tones.forEach((x) => x.oscs.forEach((o) => o.stop(t))); lfo.stop(t); }
+    };
+    b.retune(chordOf(chordD), ctx.currentTime);
+    return b;
+  }
+  function birth(c) {
+    const t = nextBeat(), LOCK = 1.15, L = t + LOCK;
+    const out = ctx.createGain(); out.gain.value = 0.42; out.connect(A.bus); send(out, A.revIn, 0.3);
+    const soft = ctx.createBiquadFilter(); soft.type = 'lowpass'; soft.frequency.value = 3400; soft.Q.value = 0.5; soft.connect(out);
+    const tones = [0, 2, 4, 7].map((d) => c.note(d, 4));
+    const ladder = [0, 1, 2, 3, 1, 2, 3, 4, 2, 3, 4, 5, 3, 4, 5, 6];
+    let tt = t, i = 0;
+    while (tt < t + 0.78 && i < ladder.length) {                     // an ordered climb through the chord
+      const k = (tt - t) / 0.78, s = ladder[i], f = tones[s % 4] * Math.pow(2, Math.floor(s / 4));
+      const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = f;
+      const g = ctx.createGain(), pan = ctx.createStereoPanner(); pan.pan.value = (i % 2 ? 0.6 : -0.6) * (1 - k);
+      env(g, tt, 0.06 + 0.04 * k, 0.002, 0.05 + 0.04 * k);
+      o.connect(g).connect(pan).connect(soft); o.start(tt); o.stop(tt + 0.2);
+      tt += 0.075 - 0.045 * k; i++;
+    }
+    const f0 = c.note(0, 3);                                           // a glassy servo climbing the scale
+    const car = ctx.createOscillator(), mod = ctx.createOscillator(), idx = ctx.createGain();
+    car.frequency.setValueAtTime(f0, t); mod.frequency.setValueAtTime(f0 * 2, t);
+    for (let j = 0; j < 8; j++) { const at = t + 0.25 + j * ((LOCK - 0.35) / 8), fr = (c.note(j, 3) / c.note(0, 3)) * f0; car.frequency.setValueAtTime(fr, at); mod.frequency.setValueAtTime(fr * 2, at); }
+    idx.gain.setValueAtTime(f0 * 0.2, t); idx.gain.linearRampToValueAtTime(f0 * 0.9, L - 0.1); idx.gain.linearRampToValueAtTime(0, L);
+    mod.connect(idx).connect(car.frequency);
+    const fl = ctx.createOscillator(); fl.frequency.setValueAtTime(4, t); fl.frequency.exponentialRampToValueAtTime(16, L - 0.12);
+    const fa = ctx.createGain(); fa.gain.value = 0.2; const sg = ctx.createGain(); sg.gain.value = 0.8; fl.connect(fa).connect(sg.gain);
+    const sv = ctx.createGain(); sv.gain.setValueAtTime(0, t + 0.2); sv.gain.linearRampToValueAtTime(0.07, t + 0.5); sv.gain.setValueAtTime(0.07, L - 0.2); sv.gain.linearRampToValueAtTime(0, L - 0.12);
+    const svl = ctx.createBiquadFilter(); svl.type = 'lowpass'; svl.frequency.value = 3200;
+    car.connect(sg).connect(svl).connect(sv).connect(out);
+    [car, mod, fl].forEach((o) => { o.start(t); o.stop(L + 0.05); });
+    [0, 0.045, 0.078, 0.1].forEach((d, j) => {                        // a short stutter before the lock
+      const at = L - 0.12 + d, o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = tones[0] * 4;
+      const g = ctx.createGain(); env(g, at, 0.04 + j * 0.012, 0.002, 0.02); o.connect(g).connect(soft); o.start(at); o.stop(at + 0.04);
+    });
+    const imp = ctx.createBuffer(1, 64, ctx.sampleRate); imp.getChannelData(0)[0] = 1; imp.getChannelData(0)[1] = -0.6;
+    const ck = ctx.createBufferSource(); ck.buffer = imp; const ckf = ctx.createBiquadFilter(); ckf.type = 'bandpass'; ckf.frequency.value = 2200; ckf.Q.value = 3;
+    const ckg = ctx.createGain(); ckg.gain.value = 0.3; ck.connect(ckf).connect(ckg).connect(out); ck.start(L);
+    const block = ctx.createBiquadFilter(); block.type = 'lowpass'; block.Q.value = 1.5; block.frequency.setValueAtTime(5000, L); block.frequency.exponentialRampToValueAtTime(900, L + 0.6);
+    const bg = ctx.createGain(); bg.gain.setValueAtTime(0, L); bg.gain.linearRampToValueAtTime(0.07, L + 0.004); bg.gain.setTargetAtTime(0, L + 0.05, 0.4);
+    block.connect(bg).connect(out);
+    tones.slice(0, 3).forEach((f, j) => { const o = ctx.createOscillator(); o.type = j ? 'sine' : 'triangle'; o.frequency.value = f; o.connect(block); o.start(L); o.stop(L + 2.5); });
+    [[tones[2] * 2, 0.16], [tones[0] * 4, 0.27]].forEach(([f, d]) => {   // a two-tone "ready"
+      const o = ctx.createOscillator(); o.frequency.value = f; const g = ctx.createGain();
+      g.gain.setValueAtTime(0, L + d); g.gain.linearRampToValueAtTime(0.045, L + d + 0.004); g.gain.setValueAtTime(0.045, L + d + 0.07); g.gain.linearRampToValueAtTime(0, L + d + 0.085);
+      o.connect(g).connect(out); o.start(L + d); o.stop(L + d + 0.12);
+    });
+    return L;
+  }
+  let meeting = false;
+  async function meet() {
+    if (meeting) return;
+    if (!playing) await start();
+    meeting = true; meetBtn.disabled = true;
+    setKid(false);
+    const t = ctx.currentTime + 0.05, D = 4.2, b = A.bloom = makeBloom();
+    // the overlap grows from 0 to 1: a touch brings the third, deeper — the fifth, a union — the octave
+    const s01 = (x, a, z) => Math.max(0, Math.min(1, (x - a) / (z - a)));
+    for (let k = 0; k <= 24; k++) {
+      const l = k / 24, at = t + l * D;
+      b.tones[0].g.gain.linearRampToValueAtTime(s01(l, 0, 0.3), at);
+      b.tones[1].g.gain.linearRampToValueAtTime(s01(l, 0.2, 0.6) * 0.8, at);
+      b.tones[2].g.gain.linearRampToValueAtTime(s01(l, 0.5, 1) * 0.5, at);
+      b.out.gain.linearRampToValueAtTime(Math.sqrt(l) * 0.05, at);
+    }
+    approach(D);
+    setTimeout(() => {
+      const L = birth(chordOf(chordD));
+      const fade = L + 0.3;
+      b.out.gain.setValueAtTime(0.05, fade); b.out.gain.linearRampToValueAtTime(0, fade + 2.2); b.stop(fade + 2.4);
+      setTimeout(() => { setKid(true); meeting = false; meetBtn.disabled = false; A.bloom = null; }, Math.max(0, (L - ctx.currentTime) * 1000));
+    }, D * 1000);
+  }
+
+  /* ---------------- visuals ---------------- */
+  const ci = document.getElementById('ci'), sq = document.getElementById('sq');
+  const kid = document.getElementById('kid'), kidPath = document.getElementById('kidPath'), kidLabel = document.getElementById('kidLabel');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let sqPulse = 0, gap = 0, gapTarget = 0, kidShown = 0, approachUntil = 0, approachFrom = 0, approachDur = 1;
+  const pulseQ = [];
+  function pulseAt(t) { pulseQ.push(t); }
+  function approach(sec) { approachFrom = performance.now(); approachDur = sec * 1000; approachUntil = approachFrom + sec * 1000 + 2600; }
+  function superellipse(n, rx, ry) {
+    let d = '';
+    for (let i = 0; i <= 64; i++) {
+      const a = (i / 64) * Math.PI * 2, c = Math.cos(a), s = Math.sin(a);
+      const x = rx * Math.sign(c) * Math.pow(Math.abs(c), 2 / n), y = ry * Math.sign(s) * Math.pow(Math.abs(s), 2 / n);
+      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }
+    return d + 'Z';
+  }
+  kidPath.setAttribute('d', superellipse(3.2, 34, 34));
+  const td = new Uint8Array(256);
+  function frame(now) {
+    let lvl = 0;
+    if (ctx && A) {
+      A.an.getByteTimeDomainData(td);
+      let sum = 0; for (let i = 0; i < td.length; i++) { const v = (td[i] - 128) / 128; sum += v * v; }
+      lvl = Math.min(1, Math.sqrt(sum / td.length) * 4);
+      while (pulseQ.length && pulseQ[0] <= ctx.currentTime) { pulseQ.shift(); sqPulse = 1; }
+    }
+    sqPulse *= 0.86;
+    // the two lean towards each other during a meeting, then rest closer
+    let k = 0;
+    if (now < approachUntil) {
+      const p = Math.min(1, (now - approachFrom) / approachDur);
+      k = p < 1 ? p * p * (3 - 2 * p) : Math.max(0, 1 - (now - approachFrom - approachDur) / 2600);
+    }
+    const lean = reduce ? 0 : k * 46;
+    const cs = 1 + (st.pad && playing ? lvl * 0.06 : 0);
+    const ss = 1 + (reduce ? 0 : sqPulse * 0.05);
+    ci.setAttribute('transform', `translate(${160 + lean} ${200}) scale(${cs.toFixed(3)})`);
+    sq.setAttribute('transform', `translate(${372 - lean} ${210}) scale(${ss.toFixed(3)})`);
+    kidShown += ((st.kid ? 1 : 0) - kidShown) * 0.06;
+    const ks = 0.4 + 0.6 * kidShown;
+    kid.setAttribute('opacity', kidShown.toFixed(3));
+    kid.setAttribute('transform', `translate(268 ${300 - 8 * kidShown}) scale(${ks.toFixed(3)}) rotate(${(15 * kidShown).toFixed(1)})`);
+    kidLabel.setAttribute('opacity', (kidShown * 0.9).toFixed(3));
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  /* ---------------- UI ---------------- */
+  const $ = (id) => document.getElementById(id);
+  const playBtn = $('play'), meetBtn = $('meet');
+  function showChord() {
+    const c = chordName(chordD);
+    $('chord').textContent = c.name;
+    $('meta').textContent = `${c.roman ? c.roman + ' · ' : ''}${NOTES_RU[st.tonic]} ${modeOf().n.toLowerCase()} · ${st.bpm} BPM`;
+  }
+  function renderChips() {
+    $('modes').innerHTML = '';
+    MODES.forEach((m) => {
+      const b = document.createElement('button'); b.type = 'button';
+      b.setAttribute('aria-pressed', String(m.id === st.mode));
+      b.innerHTML = `<span class="n"></span><span class="d"></span>`;
+      b.querySelector('.n').textContent = m.n; b.querySelector('.d').textContent = m.d;
+      b.onclick = () => { st.mode = m.id; applyNow(); renderChips(); };
+      $('modes').appendChild(b);
+    });
+    $('tonics').innerHTML = '';
+    NOTES.forEach((n, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = n;
+      b.setAttribute('aria-pressed', String(i === st.tonic));
+      b.setAttribute('aria-label', NOTES_RU[i]);
+      b.onclick = () => { st.tonic = i; applyNow(); renderChips(); };
+      $('tonics').appendChild(b);
+    });
+    $('motions').innerHTML = '';
+    MOTIONS.forEach((m) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = m.n;
+      b.setAttribute('aria-pressed', String(m.id === st.motion));
+      b.onclick = () => { st.motion = m.id; applyNow(); renderChips(); };
+      $('motions').appendChild(b);
+    });
+    $('motionHint').textContent = motionOf().h;
+    $('scenes').innerHTML = '';
+    SCENES.forEach((sc) => {
+      const b = document.createElement('button'); b.type = 'button'; b.textContent = sc.n;
+      b.setAttribute('aria-pressed', String(sc.mode === st.mode && sc.tonic === st.tonic && sc.bpm === st.bpm && sc.motion === st.motion));
+      b.onclick = () => { Object.assign(st, { mode: sc.mode, tonic: sc.tonic, bpm: sc.bpm, motion: sc.motion }); setDelayTime(); applyNow(); renderChips(); };
+      $('scenes').appendChild(b);
+    });
+    $('tempo').value = st.bpm; $('bpm').textContent = st.bpm;
+    $('vPad').setAttribute('aria-pressed', String(st.pad));
+    $('vPulse').setAttribute('aria-pressed', String(st.pulse));
+    $('vKid').setAttribute('aria-pressed', String(st.kid));
+    showChord();
+  }
+  function applyNow() {
+    if (!ctx) { showChord(); return; }
+    const p = motionOf().p;
+    const idx = Math.floor(Math.max(0, step - 1) / 32) % p.length;
+    setChord(p[idx], ctx.currentTime, false);
+  }
+  function setKid(on) { st.kid = on; renderChips(); }
+
+  playBtn.onclick = () => (playing ? stop() : start());
+  meetBtn.onclick = meet;
+  $('tempo').oninput = (e) => { st.bpm = +e.target.value; $('bpm').textContent = st.bpm; setDelayTime(); showChord(); renderChips(); };
+  $('vPad').onclick = () => { st.pad = !st.pad; if (ctx) glide(A.padG.gain, st.pad ? 1 : 0, ctx.currentTime, 0.1); renderChips(); };
+  $('vPulse').onclick = () => { st.pulse = !st.pulse; renderChips(); };
+  $('vKid').onclick = () => setKid(!st.kid);
+  renderChips();
+
+  /* ---------------- saved variants (db, with a local fallback) ---------------- */
+  let db = null, rows = [];
+  const label = (r) => {
+    const m = MODES.find((x) => x.id === r.mode), mo = MOTIONS.find((x) => x.id === r.motion);
+    return `${m ? m.n : r.mode} · ${NOTES[r.tonic]} · ${r.bpm} BPM · ${mo ? mo.n.toLowerCase() : r.motion}`;
+  };
+  function renderSaved() {
+    const ul = $('saved'); ul.innerHTML = '';
+    $('empty').hidden = rows.length > 0;
+    rows.forEach((r) => {
+      const li = document.createElement('li'); if (r.main) li.className = 'main';
+      const t = document.createElement('span'); t.className = 't'; t.textContent = (r.main ? '★ ' : '') + label(r);
+      const acts = document.createElement('span'); acts.className = 'acts';
+      const listen = document.createElement('button'); listen.type = 'button'; listen.textContent = 'Слушать';
+      listen.onclick = () => { Object.assign(st, { mode: r.mode, tonic: r.tonic, bpm: r.bpm, motion: r.motion }); setDelayTime(); renderChips(); applyNow(); if (!playing) start(); };
+      const main = document.createElement('button'); main.type = 'button'; main.textContent = r.main ? 'Главный' : 'Сделать главным';
+      main.setAttribute('aria-pressed', String(!!r.main));
+      main.onclick = () => makeMain(r.id);
+      const del = document.createElement('button'); del.type = 'button'; del.textContent = 'Убрать';
+      del.onclick = () => remove(r.id);
+      acts.append(listen, main, del);
+      li.append(t, acts);
+      if (r.note) { const n = document.createElement('span'); n.className = 'note'; n.textContent = r.note; li.append(n); }
+      ul.appendChild(li);
+    });
+  }
+  const LS = 'harmony-lab-variants';
+  const lsRead = () => { try { return JSON.parse(localStorage.getItem(LS) || '[]'); } catch (e) { return []; } };
+  const lsWrite = (v) => { try { localStorage.setItem(LS, JSON.stringify(v)); } catch (e) {} };
+  const status = (m) => { $('status').textContent = m; };
+
+  async function save() {
+    const r = { mode: st.mode, tonic: st.tonic, bpm: st.bpm, motion: st.motion, note: $('note').value.trim().slice(0, 400), main: false, createdAt: new Date().toISOString() };
+    try {
+      if (db) { await db.collection('variants').add(r); }
+      else { r.id = 'l' + Date.now(); rows = [r, ...rows]; lsWrite(rows); renderSaved(); }
+      $('note').value = '';
+      status('Сохранено в этом браузере.');
+    } catch (e) { status('Не удалось сохранить: ' + (e && e.message ? e.message : 'ошибка хранилища') + '. Попробуйте ещё раз.'); }
+  }
+  async function makeMain(id) {
+    try {
+      if (db) {
+        for (const r of rows) {
+          const want = r.id === id;
+          if (!!r.main !== want) await db.collection('variants').doc(r.id).update({ main: want });
+        }
+      } else { rows = rows.map((r) => ({ ...r, main: r.id === id })); lsWrite(rows); renderSaved(); }
+      status('Главный вариант отмечен.');
+    } catch (e) { status('Не удалось отметить: попробуйте ещё раз.'); }
+  }
+  async function remove(id) {
+    try {
+      if (db) await db.collection('variants').doc(id).delete();
+      else { rows = rows.filter((r) => r.id !== id); lsWrite(rows); renderSaved(); }
+    } catch (e) { status('Не удалось убрать: попробуйте ещё раз.'); }
+  }
+  $('save').onclick = save;
+
+  rows = lsRead(); renderSaved();
+  (async () => {
+    try {
+      db = window.claude && window.claude.use ? await window.claude.use('db') : null;
+    } catch (e) { db = null; }
+    if (!db) return;
+    db.collection('variants').orderBy('createdAt', 'desc').onSnapshot((snap) => {
+      rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderSaved();
+    }, () => { status('Хранилище недоступно, варианты сохраняются только в этом браузере.'); db = null; rows = lsRead(); renderSaved(); });
+  })();
+})();
+</script>
+</body>
+</html>
